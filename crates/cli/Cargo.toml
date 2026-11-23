@@ -1,0 +1,18 @@
+[package]
+name = "lez-registry"
+description = "CLI for the LEZ Program Registry: register, update, transfer, lookup, list, search, verify"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "lez-registry"
+path = "src/main.rs"
+
+[dependencies]
+lez-registry-sdk = { path = "../sdk" }
+registry_core = { path = "../../programs/registry/core" }
+lee_core = { git = "https://github.com/logos-blockchain/logos-execution-zone.git", tag = "v0.2.5-rc2", features = ["host"] }
+clap = { version = "4", features = ["derive", "env"] }
+serde_json = "1.0"
+serde = "1.0"

@@ -1,0 +1,571 @@
+{
+  "version": "0.1.0",
+  "name": "lez_registry",
+  "instructions": [
+    {
+      "name": "initialize",
+      "accounts": [
+        {
+          "name": "state",
+          "writable": true,
+          "signer": false,
+          "init": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": "registry_state"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer",
+          "writable": false,
+          "signer": true,
+          "init": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "register_deployer_entry",
+      "accounts": [
+        {
+          "name": "state",
+          "writable": true,
+          "signer": false,
+          "init": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": "registry_state"
+              }
+            ]
+          }
+        },
+        {
+          "name": "entry",
+          "writable": true,
+          "signer": false,
+          "init": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": "deployer_entry"
+              },
+              {
+                "kind": "account",
+                "path": "target_program"
+              }
+            ]
+          }
+        },
+        {
+          "name": "slot",
+          "writable": true,
+          "signer": false,
+          "init": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": "entry_slot"
+              },
+              {
+                "kind": "arg",
+                "path": "slot_key"
+              }
+            ]
+          }
+        },
+        {
+          "name": "target_program",
+          "writable": false,
+          "signer": true,
+          "init": false
+        },
+        {
+          "name": "clock",
+          "writable": false,
+          "signer": false,
+          "init": false
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u64"
+        },
+        {
+          "name": "slot_key",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "version",
+          "type": "string"
+        },
+        {
+          "name": "author_name",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "idl_pointer",
+          "type": "string"
+        },
+        {
+          "name": "code_pointer",
+          "type": "string"
+        },
+        {
+          "name": "source_url",
+          "type": "string"
+        },
+        {
+          "name": "commit",
+          "type": "string"
+        },
+        {
+          "name": "build_config",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "register_third_party_entry",
+      "accounts": [
+        {
+          "name": "state",
+          "writable": true,
+          "signer": false,
+          "init": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": "registry_state"
+              }
+            ]
+          }
+        },
+        {
+          "name": "entry",
+          "writable": true,
+          "signer": false,
+          "init": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": "third_party_entry"
+              },
+              {
+                "kind": "account",
+                "path": "target_program"
+              },
+              {
+                "kind": "account",
+                "path": "author"
+              }
+            ]
+          }
+        },
+        {
+          "name": "slot",
+          "writable": true,
+          "signer": false,
+          "init": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": "entry_slot"
+              },
+              {
+                "kind": "arg",
+                "path": "slot_key"
+              }
+            ]
+          }
+        },
+        {
+          "name": "target_program",
+          "writable": false,
+          "signer": false,
+          "init": false
+        },
+        {
+          "name": "author",
+          "writable": false,
+          "signer": true,
+          "init": false
+        },
+        {
+          "name": "clock",
+          "writable": false,
+          "signer": false,
+          "init": false
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u64"
+        },
+        {
+          "name": "slot_key",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "version",
+          "type": "string"
+        },
+        {
+          "name": "author_name",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "idl_pointer",
+          "type": "string"
+        },
+        {
+          "name": "code_pointer",
+          "type": "string"
+        },
+        {
+          "name": "source_url",
+          "type": "string"
+        },
+        {
+          "name": "commit",
+          "type": "string"
+        },
+        {
+          "name": "build_config",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "update_deployer_entry",
+      "accounts": [
+        {
+          "name": "entry",
+          "writable": true,
+          "signer": false,
+          "init": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": "deployer_entry"
+              },
+              {
+                "kind": "account",
+                "path": "target_program"
+              }
+            ]
+          }
+        },
+        {
+          "name": "target_program",
+          "writable": false,
+          "signer": true,
+          "init": false
+        },
+        {
+          "name": "clock",
+          "writable": false,
+          "signer": false,
+          "init": false
+        }
+      ],
+      "args": [
+        {
+          "name": "version",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "idl_pointer",
+          "type": "string"
+        },
+        {
+          "name": "code_pointer",
+          "type": "string"
+        },
+        {
+          "name": "source_url",
+          "type": "string"
+        },
+        {
+          "name": "commit",
+          "type": "string"
+        },
+        {
+          "name": "build_config",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "update_third_party_entry",
+      "accounts": [
+        {
+          "name": "entry",
+          "writable": true,
+          "signer": false,
+          "init": false
+        },
+        {
+          "name": "author",
+          "writable": false,
+          "signer": true,
+          "init": false
+        },
+        {
+          "name": "target_program",
+          "writable": false,
+          "signer": false,
+          "init": false
+        },
+        {
+          "name": "clock",
+          "writable": false,
+          "signer": false,
+          "init": false
+        }
+      ],
+      "args": [
+        {
+          "name": "version",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "idl_pointer",
+          "type": "string"
+        },
+        {
+          "name": "code_pointer",
+          "type": "string"
+        },
+        {
+          "name": "source_url",
+          "type": "string"
+        },
+        {
+          "name": "commit",
+          "type": "string"
+        },
+        {
+          "name": "build_config",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "transfer_authorship",
+      "accounts": [
+        {
+          "name": "entry",
+          "writable": true,
+          "signer": false,
+          "init": false
+        },
+        {
+          "name": "current_author",
+          "writable": false,
+          "signer": true,
+          "init": false
+        },
+        {
+          "name": "new_author",
+          "writable": false,
+          "signer": true,
+          "init": false
+        }
+      ],
+      "args": [
+        {
+          "name": "new_author_name",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "EntryKind",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Deployer"
+          },
+          {
+            "name": "ThirdParty"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RegistryState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "entry_count",
+            "type": "u64"
+          },
+          {
+            "name": "deployer_entries",
+            "type": "u64"
+          },
+          {
+            "name": "third_party_entries",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EntrySlot",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "index",
+            "type": "u64"
+          },
+          {
+            "name": "entry_id",
+            "type": "account_id"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RegistryEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "program_id",
+            "type": "account_id"
+          },
+          {
+            "name": "kind",
+            "type": {
+              "defined": "EntryKind"
+            }
+          },
+          {
+            "name": "author",
+            "type": "account_id"
+          },
+          {
+            "name": "author_name",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "version",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "idl_pointer",
+            "type": "string"
+          },
+          {
+            "name": "code_pointer",
+            "type": "string"
+          },
+          {
+            "name": "source_url",
+            "type": "string"
+          },
+          {
+            "name": "commit",
+            "type": "string"
+          },
+          {
+            "name": "build_config",
+            "type": "string"
+          },
+          {
+            "name": "image_id",
+            "type": {
+              "array": [
+                "u32",
+                8
+              ]
+            }
+          },
+          {
+            "name": "header_immutable",
+            "type": "bool"
+          },
+          {
+            "name": "registered_at",
+            "type": "u64"
+          },
+          {
+            "name": "registered_block",
+            "type": "u64"
+          },
+          {
+            "name": "updated_at",
+            "type": "u64"
+          },
+          {
+            "name": "index",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ],
+  "instruction_type": "registry_core::Instruction"
+}

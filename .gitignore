@@ -1,0 +1,6 @@
+target/
+.e2e/
+programs/registry/methods/guest/target/
+benchmark/target/
+modules/registry/build/
+result
