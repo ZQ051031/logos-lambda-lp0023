@@ -52,6 +52,7 @@ jobs:
           curl -fsSL https://risczero.com/install | bash
           echo "$HOME/.risc0/bin" >> "$GITHUB_PATH"
           "$HOME/.risc0/bin/rzup" install cargo-risczero 3.0.5
+          "$HOME/.risc0/bin/rzup" install rust 1.97.0
       - name: Cache tools
         uses: actions/cache@v4
         with:

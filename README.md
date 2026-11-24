@@ -115,7 +115,7 @@ Only the user's configured LEZ sequencer and Logos Storage node are contacted. T
 
 ## Setup
 
-Requirements: Linux or macOS, Git, Rust (via rustup; the toolchain is pinned in `rust-toolchain.toml`), Docker, Python 3, curl, unzip, and [`rzup`](https://dev.risczero.com/api/zkvm/install) with `cargo-risczero` 3.0.5. On Debian or Ubuntu, SPEL and the LEZ wallet also need `sudo apt-get install libpcsclite-dev libssl-dev pkg-config clang libclang-dev`. Nix is needed only for the Core Module.
+Requirements: Linux or macOS, Git, Rust (via rustup; the toolchain is pinned in `rust-toolchain.toml`), Docker, Python 3, curl, unzip, and [`rzup`](https://dev.risczero.com/api/zkvm/install) with `cargo-risczero` 3.0.5 and the RISC Zero Rust toolchain (`rzup install cargo-risczero 3.0.5 && rzup install rust 1.97.0`). On Debian or Ubuntu, SPEL and the LEZ wallet also need `sudo apt-get install libpcsclite-dev libssl-dev pkg-config clang libclang-dev`. Nix is needed only for the Core Module.
 
 ```bash
 git clone https://github.com/ZQ051031/logos-lambda-lp0023
