@@ -1,0 +1,27 @@
+{
+  "name": "lez_registry_module",
+  "version": "0.1.0",
+  "type": "core",
+  "interface": "universal",
+  "category": "registry",
+  "description": "Logos core module for the LEZ Program Registry (LP-0023): register entries, resolve program ids to metadata and IDL, search",
+  "main": "lez_registry_module_plugin",
+  "dependencies": [],
+  "nix": {
+    "packages": {
+      "build": [],
+      "runtime": []
+    },
+    "external_libraries": [
+      {
+        "name": "registry_ffi"
+      }
+    ],
+    "cmake": {
+      "find_packages": [],
+      "extra_sources": [],
+      "extra_include_dirs": [],
+      "extra_link_libraries": []
+    }
+  }
+}

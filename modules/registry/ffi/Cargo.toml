@@ -1,7 +1,15 @@
 [package]
 name = "registry_ffi"
+description = "C ABI over the LEZ Program Registry SDK, used by the Logos Core Module"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[lib]
+crate-type = ["cdylib", "staticlib", "rlib"]
+
 [dependencies]
+lez-registry-sdk = { path = "../../../crates/sdk" }
+registry_core = { path = "../../../programs/registry/core" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

@@ -2487,6 +2487,12 @@ dependencies = [
 [[package]]
 name = "registry_ffi"
 version = "0.1.0"
+dependencies = [
+ "lez-registry-sdk",
+ "registry_core",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "registry_program"

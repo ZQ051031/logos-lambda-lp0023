@@ -1,0 +1,14 @@
+This project is dual-licensed under the MIT License and the Apache License,
+Version 2.0 (SPDX: MIT AND Apache-2.0).
+
+- MIT License: see LICENSE-MIT
+- Apache License, Version 2.0: see LICENSE-APACHE
+
+Copyright (c) 2026 ZQ051031 and contributors.
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in this work shall be licensed under both licenses as above,
+without any additional terms or conditions.
+
+tools/idl-gen is adapted from logos-blockchain/lez-programs (MIT License,
+Copyright (c) 2026 Logos Blockchain).
