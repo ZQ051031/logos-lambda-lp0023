@@ -43,6 +43,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.94.0
       - name: Free disk space
         run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+      - name: System packages
+        run: sudo apt-get update && sudo apt-get install -y libpcsclite-dev libssl-dev pkg-config clang libclang-dev unzip
       - name: Install cargo-risczero (Docker guest builds)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

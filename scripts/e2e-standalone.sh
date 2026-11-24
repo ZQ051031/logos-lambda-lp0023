@@ -4,8 +4,9 @@
 #
 #     ./scripts/e2e-standalone.sh
 #
-# Needs: git, curl, unzip, python3, Rust (rustup), Docker, and `cargo risczero`
-# (rzup) for the reproducible guest build. Everything else (SPEL, LEZ
+# Needs: git, curl, unzip, python3, Rust (rustup), Docker, `cargo risczero`
+# (rzup) for the reproducible guest build, and on Debian/Ubuntu
+# `libpcsclite-dev libssl-dev pkg-config clang libclang-dev` for SPEL and LEZ. Everything else (SPEL, LEZ
 # sequencer + wallet, Logos Storage) is fetched at pinned versions into
 # $WORK_DIR. Set SPEL_BIN / WALLET_BIN / SEQUENCER_BIN / STORAGE_URL to reuse
 # existing installs. Debug network only: fees are paid by the LEZ debug
