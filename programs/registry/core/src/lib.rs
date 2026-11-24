@@ -38,7 +38,9 @@ pub mod limits {
 /// Who created an entry. Decided on-chain by the instruction that created it:
 /// `Deployer` entries can only be created with the program header's signature.
 #[account_type]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize,
+)]
 pub enum EntryKind {
     Deployer,
     ThirdParty,
@@ -46,7 +48,9 @@ pub enum EntryKind {
 
 /// Singleton registry counters.
 #[account_type]
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[derive(
+    Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize,
+)]
 pub struct RegistryState {
     /// Number of enumeration slots written so far; slots are `0..entry_count`.
     pub entry_count: u64,
@@ -99,7 +103,9 @@ pub struct RegistryEntry {
 }
 
 /// Entry fields supplied by the registrant.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[derive(
+    Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize,
+)]
 pub struct EntryInput {
     pub name: String,
     pub version: String,

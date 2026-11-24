@@ -12,8 +12,13 @@ pub struct RpcClient {
 impl RpcClient {
     #[must_use]
     pub fn new(url: &str) -> Self {
-        let agent = ureq::AgentBuilder::new().timeout(std::time::Duration::from_secs(30)).build();
-        Self { url: url.to_string(), agent }
+        let agent = ureq::AgentBuilder::new()
+            .timeout(std::time::Duration::from_secs(30))
+            .build();
+        Self {
+            url: url.to_string(),
+            agent,
+        }
     }
 
     pub fn call(&self, method: &str, params: Value) -> Result<Value> {
@@ -28,7 +33,9 @@ impl RpcClient {
         if let Some(err) = resp.get("error") {
             return Err(Error::Rpc(format!("{method}: {err}")));
         }
-        resp.get("result").cloned().ok_or_else(|| Error::Rpc(format!("{method}: no result")))
+        resp.get("result")
+            .cloned()
+            .ok_or_else(|| Error::Rpc(format!("{method}: no result")))
     }
 
     /// Unknown accounts come back as the default (unowned, empty) account.
@@ -40,6 +47,7 @@ impl RpcClient {
 
     pub fn last_block_id(&self) -> Result<u64> {
         let v = self.call("getLastBlockId", json!([]))?;
-        v.as_u64().ok_or_else(|| Error::Decode(format!("block id: {v}")))
+        v.as_u64()
+            .ok_or_else(|| Error::Decode(format!("block id: {v}")))
     }
 }

@@ -63,20 +63,28 @@ impl core::fmt::Display for RegistryError {
         match self {
             Self::NotAProgram => write!(f, "program account is not a program-loader header"),
             Self::BadClock => write!(f, "clock account missing or malformed"),
-            Self::BadIndex { expected, got } => write!(f, "slot index must be {expected}, got {got}"),
+            Self::BadIndex { expected, got } => {
+                write!(f, "slot index must be {expected}, got {got}")
+            }
             Self::FieldTooLong { field, max } => write!(f, "{field} exceeds {max} bytes"),
             Self::EmptyField(field) => write!(f, "{field} must not be empty"),
             Self::NotAuthor => write!(f, "only the entry's author may do this"),
             Self::NotSigner => write!(f, "required signature missing"),
             Self::WrongProgram => write!(f, "program account does not match the entry"),
             Self::DeployerEntryNotTransferable => {
-                write!(f, "deployer entries are bound to the deployer key and cannot be transferred")
+                write!(
+                    f,
+                    "deployer entries are bound to the deployer key and cannot be transferred"
+                )
             }
             Self::SameAuthor => write!(f, "new author equals current author"),
             Self::Corrupt(what) => write!(f, "{what} account data is corrupt"),
             Self::NotOwnedByRegistry => write!(f, "account is not owned by the registry"),
             Self::Overflow => write!(f, "counter overflow"),
-            Self::BadSlotKey => write!(f, "slot_key must be the little-endian 32-byte encoding of index"),
+            Self::BadSlotKey => write!(
+                f,
+                "slot_key must be the little-endian 32-byte encoding of index"
+            ),
         }
     }
 }
@@ -113,7 +121,10 @@ pub fn validate_input(input: &EntryInput) -> Result<()> {
     )
 }
 
-#[allow(clippy::too_many_arguments, reason = "mirrors the flat instruction arguments")]
+#[allow(
+    clippy::too_many_arguments,
+    reason = "mirrors the flat instruction arguments"
+)]
 fn validate_mutable(
     version: &str,
     description: &str,
@@ -159,7 +170,10 @@ pub fn read_entry(entry: &AccountWithMetadata) -> Result<RegistryEntry> {
 }
 
 /// Creates the singleton registry state account.
-pub fn initialize(state: AccountWithMetadata, payer: AccountWithMetadata) -> Result<Vec<AccountStateDiff>> {
+pub fn initialize(
+    state: AccountWithMetadata,
+    payer: AccountWithMetadata,
+) -> Result<Vec<AccountStateDiff>> {
     Ok(vec![
         write(state, RegistryState::default().to_bytes())?,
         AccountStateDiff::unchanged(payer),
@@ -192,13 +206,23 @@ pub fn register(
     if slot_key != registry_core::seed_from_u64(index) {
         return Err(RegistryError::BadSlotKey);
     }
-    let RegisterAccounts { state, entry, slot, program, author, clock } = accounts;
+    let RegisterAccounts {
+        state,
+        entry,
+        slot,
+        program,
+        author,
+        clock,
+    } = accounts;
     validate_input(&input)?;
     let header = read_header(&program)?;
     let now = read_clock(&clock)?;
     let mut counters = read_state(&state)?;
     if index != counters.entry_count {
-        return Err(RegistryError::BadIndex { expected: counters.entry_count, got: index });
+        return Err(RegistryError::BadIndex {
+            expected: counters.entry_count,
+            got: index,
+        });
     }
     let author_id = match (kind, &author) {
         (EntryKind::Deployer, _) => {
@@ -210,15 +234,22 @@ pub fn register(
         (EntryKind::ThirdParty, Some(a)) if a.is_authorized => a.account_id,
         (EntryKind::ThirdParty, _) => return Err(RegistryError::NotSigner),
     };
-    counters.entry_count = counters.entry_count.checked_add(1).ok_or(RegistryError::Overflow)?;
+    counters.entry_count = counters
+        .entry_count
+        .checked_add(1)
+        .ok_or(RegistryError::Overflow)?;
     match kind {
         EntryKind::Deployer => {
-            counters.deployer_entries =
-                counters.deployer_entries.checked_add(1).ok_or(RegistryError::Overflow)?;
+            counters.deployer_entries = counters
+                .deployer_entries
+                .checked_add(1)
+                .ok_or(RegistryError::Overflow)?;
         }
         EntryKind::ThirdParty => {
-            counters.third_party_entries =
-                counters.third_party_entries.checked_add(1).ok_or(RegistryError::Overflow)?;
+            counters.third_party_entries = counters
+                .third_party_entries
+                .checked_add(1)
+                .ok_or(RegistryError::Overflow)?;
         }
     }
     let record = RegistryEntry {
@@ -241,7 +272,10 @@ pub fn register(
         updated_at: now.timestamp,
         index,
     };
-    let slot_record = EntrySlot { index, entry_id: entry.account_id };
+    let slot_record = EntrySlot {
+        index,
+        entry_id: entry.account_id,
+    };
     let mut diffs = vec![
         write(state, counters.to_bytes())?,
         write(entry, record.to_bytes())?,

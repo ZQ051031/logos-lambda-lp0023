@@ -19,10 +19,20 @@ const REGISTRY_IDL: &str = include_str!("../../../artifacts/lez_registry-idl.jso
 #[command(name = "lez-registry", version, about = "LEZ Program Registry client")]
 struct Cli {
     /// LEZ sequencer JSON-RPC endpoint.
-    #[arg(long, env = "LEZ_SEQUENCER_URL", default_value = "http://127.0.0.1:3040", global = true)]
+    #[arg(
+        long,
+        env = "LEZ_SEQUENCER_URL",
+        default_value = "http://127.0.0.1:3040",
+        global = true
+    )]
     sequencer: String,
     /// Logos Storage REST API base.
-    #[arg(long, env = "LEZ_STORAGE_URL", default_value = "http://127.0.0.1:8080/api/storage/v1", global = true)]
+    #[arg(
+        long,
+        env = "LEZ_STORAGE_URL",
+        default_value = "http://127.0.0.1:8080/api/storage/v1",
+        global = true
+    )]
     storage: String,
     /// Registry program address (its program header account).
     #[arg(long, env = "LEZ_REGISTRY_ID", global = true)]
@@ -182,8 +192,15 @@ fn id(s: &str) -> AccountId {
 }
 
 fn registry(cli: &Cli) -> Registry {
-    let rid = cli.registry.as_deref().unwrap_or_else(|| die("--registry / LEZ_REGISTRY_ID is required"));
-    Registry::new(Config { sequencer_url: cli.sequencer.clone(), storage_url: cli.storage.clone(), registry_id: id(rid) })
+    let rid = cli
+        .registry
+        .as_deref()
+        .unwrap_or_else(|| die("--registry / LEZ_REGISTRY_ID is required"));
+    Registry::new(Config {
+        sequencer_url: cli.sequencer.clone(),
+        storage_url: cli.storage.clone(),
+        registry_id: id(rid),
+    })
 }
 
 fn signer(tx: &Tx) -> Signer {
@@ -191,7 +208,11 @@ fn signer(tx: &Tx) -> Signer {
     std::fs::create_dir_all(&dir).unwrap_or_else(|e| die(e));
     let idl_path = dir.join("lez_registry-idl.json");
     std::fs::write(&idl_path, REGISTRY_IDL).unwrap_or_else(|e| die(e));
-    Signer { spel_bin: tx.spel.clone(), idl_path, fee_payer: tx.fee_payer.clone() }
+    Signer {
+        spel_bin: tx.spel.clone(),
+        idl_path,
+        fee_payer: tx.fee_payer.clone(),
+    }
 }
 
 fn git_archive(repo: &Path, commit: &str) -> Vec<u8> {
@@ -202,7 +223,10 @@ fn git_archive(repo: &Path, commit: &str) -> Vec<u8> {
         .output()
         .unwrap_or_else(|e| die(format!("git: {e}")));
     if !out.status.success() {
-        die(format!("git archive failed: {}", String::from_utf8_lossy(&out.stderr)));
+        die(format!(
+            "git archive failed: {}",
+            String::from_utf8_lossy(&out.stderr)
+        ));
     }
     out.stdout
 }
@@ -214,10 +238,18 @@ fn publish_fields(reg: &Registry, f: &Fields) -> (Option<String>, Option<String>
         reg.storage.upload(&bytes).unwrap_or_else(|e| die(e))
     });
     let code = f.source_repo.as_ref().map(|r| {
-        let commit = f.commit.as_deref().unwrap_or_else(|| die("--commit is required with --source-repo"));
-        reg.storage.upload(&git_archive(r, commit)).unwrap_or_else(|e| die(e))
+        let commit = f
+            .commit
+            .as_deref()
+            .unwrap_or_else(|| die("--commit is required with --source-repo"));
+        reg.storage
+            .upload(&git_archive(r, commit))
+            .unwrap_or_else(|e| die(e))
     });
-    (idl.or_else(|| f.idl_pointer.clone()), code.or_else(|| f.code_pointer.clone()))
+    (
+        idl.or_else(|| f.idl_pointer.clone()),
+        code.or_else(|| f.code_pointer.clone()),
+    )
 }
 
 fn kind_label(v: &EntryView) -> &'static str {
@@ -235,8 +267,19 @@ fn print_entry(v: &EntryView, idl: Option<&IdlStatus>, marks: &LocalVerification
     println!("  entry        {}  (slot {})", v.entry_id, e.index);
     println!("  author       {} ({})", e.author_name, v.author);
     println!("  description  {}", e.description);
-    println!("  registered   {} ms (block {}), updated {} ms", e.registered_at, e.registered_block, e.updated_at);
-    println!("  image id     {}{}", v.image_id, if e.header_immutable { " (immutable)" } else { "" });
+    println!(
+        "  registered   {} ms (block {}), updated {} ms",
+        e.registered_at, e.registered_block, e.updated_at
+    );
+    println!(
+        "  image id     {}{}",
+        v.image_id,
+        if e.header_immutable {
+            " (immutable)"
+        } else {
+            ""
+        }
+    );
     println!("  idl          {}", e.idl_pointer);
     println!("  code         {}", e.code_pointer);
     if !e.source_url.is_empty() {
@@ -245,16 +288,29 @@ fn print_entry(v: &EntryView, idl: Option<&IdlStatus>, marks: &LocalVerification
     println!("  commit       {}", e.commit);
     println!("  build        {}", e.build_config);
     let verified = marks.is_verified(&v.program_id, &v.image_id);
-    println!("  local verify {}", if verified { "LOCALLY VERIFIED" } else { "not verified by you" });
+    println!(
+        "  local verify {}",
+        if verified {
+            "LOCALLY VERIFIED"
+        } else {
+            "not verified by you"
+        }
+    );
     match idl {
         Some(IdlStatus::Available { idl }) => {
             let ixs: Vec<&str> = idl["instructions"]
                 .as_array()
                 .map(|a| a.iter().filter_map(|i| i["name"].as_str()).collect())
                 .unwrap_or_default();
-            println!("  IDL          available: {} instruction(s): {}", ixs.len(), ixs.join(", "));
+            println!(
+                "  IDL          available: {} instruction(s): {}",
+                ixs.len(),
+                ixs.join(", ")
+            );
         }
-        Some(IdlStatus::Unavailable { reason }) => println!("  IDL          IDL unavailable ({reason})"),
+        Some(IdlStatus::Unavailable { reason }) => {
+            println!("  IDL          IDL unavailable ({reason})")
+        }
         None => {}
     }
 }
@@ -268,23 +324,44 @@ fn main() {
     let marks = LocalVerifications::load().unwrap_or_default();
     match &cli.cmd {
         Cmd::Publish { file } => {
-            let bytes = std::fs::read(file).unwrap_or_else(|e| die(format!("{}: {e}", file.display())));
+            let bytes =
+                std::fs::read(file).unwrap_or_else(|e| die(format!("{}: {e}", file.display())));
             let s = sdk::StorageClient::new(&cli.storage);
             println!("{}", s.upload(&bytes).unwrap_or_else(|e| die(e)));
         }
         Cmd::PublishSource { repo, commit } => {
             let s = sdk::StorageClient::new(&cli.storage);
-            println!("{}", s.upload(&git_archive(repo, commit)).unwrap_or_else(|e| die(e)));
+            println!(
+                "{}",
+                s.upload(&git_archive(repo, commit))
+                    .unwrap_or_else(|e| die(e))
+            );
         }
         Cmd::Init { payer, tx } => {
             let reg = registry(&cli);
-            signer(tx).initialize(&reg, &id(payer)).unwrap_or_else(|e| die(e));
-            println!("initialised registry state {}", pda::state(&reg.config.registry_id));
+            signer(tx)
+                .initialize(&reg, &id(payer))
+                .unwrap_or_else(|e| die(e));
+            println!(
+                "initialised registry state {}",
+                pda::state(&reg.config.registry_id)
+            );
         }
-        Cmd::Register { program, third_party, author, name, author_name, fields, tx } => {
+        Cmd::Register {
+            program,
+            third_party,
+            author,
+            name,
+            author_name,
+            fields,
+            tx,
+        } => {
             let reg = registry(&cli);
             let (idl_pointer, code_pointer) = publish_fields(&reg, fields);
-            let need = |v: &Option<String>, f: &str| v.clone().unwrap_or_else(|| die(format!("--{f} is required")));
+            let need = |v: &Option<String>, f: &str| {
+                v.clone()
+                    .unwrap_or_else(|| die(format!("--{f} is required")))
+            };
             let input = EntryInput {
                 name: name.clone(),
                 version: need(&fields.version, "version"),
@@ -309,7 +386,12 @@ fn main() {
             .unwrap_or_else(|e| die(e));
             println!("registered entry {entry}");
         }
-        Cmd::Update { program, author, fields, tx } => {
+        Cmd::Update {
+            program,
+            author,
+            fields,
+            tx,
+        } => {
             let reg = registry(&cli);
             let p = id(program);
             let a = author.as_deref().map(id);
@@ -317,7 +399,10 @@ fn main() {
                 None => pda::deployer_entry(&reg.config.registry_id, &p),
                 Some(a) => pda::third_party_entry(&reg.config.registry_id, &p, a),
             };
-            let cur = reg.entry_at(&entry_id).unwrap_or_else(|e| die(e)).unwrap_or_else(|| die("no such entry"));
+            let cur = reg
+                .entry_at(&entry_id)
+                .unwrap_or_else(|e| die(e))
+                .unwrap_or_else(|| die("no such entry"));
             let (idl_pointer, code_pointer) = publish_fields(&reg, fields);
             let or = |v: &Option<String>, d: &str| v.clone().unwrap_or_else(|| d.to_string());
             let e = &cur.entry;
@@ -330,12 +415,22 @@ fn main() {
                 commit: or(&fields.commit, &e.commit),
                 build_config: or(&fields.build_config, &e.build_config),
             };
-            signer(tx).update(&reg, &entry_id, a.as_ref(), &u).unwrap_or_else(|e| die(e));
+            signer(tx)
+                .update(&reg, &entry_id, a.as_ref(), &u)
+                .unwrap_or_else(|e| die(e));
             println!("updated entry {entry_id}");
         }
-        Cmd::Transfer { entry, from, to, new_author_name, tx } => {
+        Cmd::Transfer {
+            entry,
+            from,
+            to,
+            new_author_name,
+            tx,
+        } => {
             let reg = registry(&cli);
-            signer(tx).transfer(&reg, &id(entry), &id(from), &id(to), new_author_name).unwrap_or_else(|e| die(e));
+            signer(tx)
+                .transfer(&reg, &id(entry), &id(from), &id(to), new_author_name)
+                .unwrap_or_else(|e| die(e));
             println!("transferred entry {entry} to {to}");
         }
         Cmd::Lookup { program } => {
@@ -357,7 +452,13 @@ fn main() {
                 Cmd::Search { name, author, kind } => Query {
                     name: name.clone(),
                     author: author.clone(),
-                    kind: kind.as_deref().map(|k| if k == "deployer" { EntryKind::Deployer } else { EntryKind::ThirdParty }),
+                    kind: kind.as_deref().map(|k| {
+                        if k == "deployer" {
+                            EntryKind::Deployer
+                        } else {
+                            EntryKind::ThirdParty
+                        }
+                    }),
                 },
                 _ => Query::default(),
             };
@@ -365,15 +466,39 @@ fn main() {
             if cli.json {
                 return print_json(&found);
             }
-            println!("{} entr{}", found.len(), if found.len() == 1 { "y" } else { "ies" });
+            println!(
+                "{} entr{}",
+                found.len(),
+                if found.len() == 1 { "y" } else { "ies" }
+            );
             for v in &found {
                 print_entry(v, None, &marks);
             }
         }
-        Cmd::Verify { program, author, source_dir, binary, mark } => verify_cmd(&cli, program, author.as_deref(), source_dir.as_deref(), binary.as_deref(), *mark),
+        Cmd::Verify {
+            program,
+            author,
+            source_dir,
+            binary,
+            mark,
+        } => verify_cmd(
+            &cli,
+            program,
+            author.as_deref(),
+            source_dir.as_deref(),
+            binary.as_deref(),
+            *mark,
+        ),
         Cmd::Verified => print_json(&marks.programs),
-        Cmd::Pda { program, author, slot } => {
-            let rid = id(cli.registry.as_deref().unwrap_or_else(|| die("--registry is required")));
+        Cmd::Pda {
+            program,
+            author,
+            slot,
+        } => {
+            let rid = id(cli
+                .registry
+                .as_deref()
+                .unwrap_or_else(|| die("--registry is required")));
             println!("state {}", pda::state(&rid));
             if let Some(p) = program.as_deref().map(id) {
                 println!("deployer_entry {}", pda::deployer_entry(&rid, &p));
@@ -388,19 +513,30 @@ fn main() {
     }
 }
 
-fn verify_cmd(cli: &Cli, program: &str, author: Option<&str>, source_dir: Option<&Path>, binary: Option<&Path>, mark: bool) {
+fn verify_cmd(
+    cli: &Cli,
+    program: &str,
+    author: Option<&str>,
+    source_dir: Option<&Path>,
+    binary: Option<&Path>,
+    mark: bool,
+) {
     let reg = registry(cli);
     let p = id(program);
     let entry_id = match author.map(id) {
         None => pda::deployer_entry(&reg.config.registry_id, &p),
         Some(a) => pda::third_party_entry(&reg.config.registry_id, &p, &a),
     };
-    let view = reg.entry_at(&entry_id).unwrap_or_else(|e| die(e)).unwrap_or_else(|| die("no such entry"));
+    let view = reg
+        .entry_at(&entry_id)
+        .unwrap_or_else(|e| die(e))
+        .unwrap_or_else(|| die("no such entry"));
     let header_acc = reg.rpc.get_account(&p).unwrap_or_else(|e| die(e));
     if header_acc.program_owner != registry_core::PROGRAM_LOADER_ACCOUNT_ID {
         die("program id is not a deployed program header");
     }
-    let header = ProgramHeader::from_bytes(header_acc.data.as_ref()).unwrap_or_else(|| die("bad program header"));
+    let header = ProgramHeader::from_bytes(header_acc.data.as_ref())
+        .unwrap_or_else(|| die("bad program header"));
     let bin = match binary {
         Some(b) => b.to_path_buf(),
         None => {
@@ -411,7 +547,10 @@ fn verify_cmd(cli: &Cli, program: &str, author: Option<&str>, source_dir: Option
                     let dir = verify::home_dir().join("sources").join(&view.image_id);
                     let _ = std::fs::remove_dir_all(&dir);
                     eprintln!("fetching source {}", view.entry.code_pointer);
-                    let archive = reg.storage.fetch(&view.entry.code_pointer).unwrap_or_else(|e| die(e));
+                    let archive = reg
+                        .storage
+                        .fetch(&view.entry.code_pointer)
+                        .unwrap_or_else(|e| die(e));
                     verify::unpack(&archive, &dir).unwrap_or_else(|e| die(e));
                     dir
                 }
@@ -429,14 +568,23 @@ fn verify_cmd(cli: &Cli, program: &str, author: Option<&str>, source_dir: Option
         println!("built   {}", cmp.built_image_id);
         println!("header  {}", cmp.header_image_id);
         println!("entry   {}", cmp.entry_image_id);
-        println!("{}", if cmp.matches { "MATCH: rebuilt source produces the deployed program" } else { "MISMATCH" });
+        println!(
+            "{}",
+            if cmp.matches {
+                "MATCH: rebuilt source produces the deployed program"
+            } else {
+                "MISMATCH"
+            }
+        );
     }
     if !cmp.matches {
         exit(2);
     }
     if mark {
         let mut marks = LocalVerifications::load().unwrap_or_default();
-        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs());
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |d| d.as_secs());
         marks.programs.insert(
             view.program_id.clone(),
             LocalVerification {
@@ -448,6 +596,10 @@ fn verify_cmd(cli: &Cli, program: &str, author: Option<&str>, source_dir: Option
             },
         );
         marks.save().unwrap_or_else(|e| die(e));
-        println!("marked {} as locally verified ({})", view.program_id, LocalVerifications::path().display());
+        println!(
+            "marked {} as locally verified ({})",
+            view.program_id,
+            LocalVerifications::path().display()
+        );
     }
 }

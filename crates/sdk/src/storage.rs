@@ -20,8 +20,13 @@ const MAX_DOWNLOAD: u64 = 64 * 1024 * 1024;
 impl StorageClient {
     #[must_use]
     pub fn new(base: &str) -> Self {
-        let agent = ureq::AgentBuilder::new().timeout(std::time::Duration::from_secs(60)).build();
-        Self { base: base.trim_end_matches('/').to_string(), agent }
+        let agent = ureq::AgentBuilder::new()
+            .timeout(std::time::Duration::from_secs(60))
+            .build();
+        Self {
+            base: base.trim_end_matches('/').to_string(),
+            agent,
+        }
     }
 
     /// Uploads bytes and returns the `logos-storage://<cid>` pointer.
@@ -62,6 +67,8 @@ impl StorageClient {
         if let Some(path) = pointer.strip_prefix("file://") {
             return std::fs::read(path).map_err(|e| Error::Storage(format!("{path}: {e}")));
         }
-        Err(Error::Storage(format!("unsupported pointer scheme: {pointer}")))
+        Err(Error::Storage(format!(
+            "unsupported pointer scheme: {pointer}"
+        )))
     }
 }

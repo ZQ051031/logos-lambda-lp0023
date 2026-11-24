@@ -95,8 +95,11 @@ pub struct Query {
 impl Query {
     #[must_use]
     pub fn matches(&self, v: &EntryView) -> bool {
-        let contains = |hay: &str, needle: &str| hay.to_lowercase().contains(&needle.to_lowercase());
-        self.name.as_deref().is_none_or(|n| contains(&v.entry.name, n))
+        let contains =
+            |hay: &str, needle: &str| hay.to_lowercase().contains(&needle.to_lowercase());
+        self.name
+            .as_deref()
+            .is_none_or(|n| contains(&v.entry.name, n))
             && self
                 .author
                 .as_deref()
@@ -108,7 +111,11 @@ impl Query {
 /// Image id words as the hex string `spel program-id` and `cargo risczero` print.
 #[must_use]
 pub fn image_id_hex(words: &[u32; 8]) -> String {
-    words.iter().flat_map(|w| w.to_le_bytes()).map(|b| format!("{b:02x}")).collect()
+    words
+        .iter()
+        .flat_map(|w| w.to_le_bytes())
+        .map(|b| format!("{b:02x}"))
+        .collect()
 }
 
 /// Read-only registry client.
@@ -123,7 +130,11 @@ impl Registry {
     pub fn new(config: Config) -> Self {
         let rpc = RpcClient::new(&config.sequencer_url);
         let storage = StorageClient::new(&config.storage_url);
-        Self { config, rpc, storage }
+        Self {
+            config,
+            rpc,
+            storage,
+        }
     }
 
     pub fn state(&self) -> Result<RegistryState> {
@@ -160,8 +171,16 @@ impl Registry {
     }
 
     /// The third-party entry of `program_id` registered by `author`, by PDA.
-    pub fn third_party_entry(&self, program_id: &AccountId, author: &AccountId) -> Result<Option<EntryView>> {
-        self.entry_at(&pda::third_party_entry(&self.config.registry_id, program_id, author))
+    pub fn third_party_entry(
+        &self,
+        program_id: &AccountId,
+        author: &AccountId,
+    ) -> Result<Option<EntryView>> {
+        self.entry_at(&pda::third_party_entry(
+            &self.config.registry_id,
+            program_id,
+            author,
+        ))
     }
 
     /// Every entry, in registration order.
@@ -174,7 +193,8 @@ impl Registry {
             if acc.program_owner != self.config.registry_id {
                 continue;
             }
-            let slot = registry_core::EntrySlot::try_from(&acc.data).map_err(|e| Error::Decode(e.to_string()))?;
+            let slot = registry_core::EntrySlot::try_from(&acc.data)
+                .map_err(|e| Error::Decode(e.to_string()))?;
             if let Some(v) = self.entry_at(&slot.entry_id)? {
                 out.push(v);
             }
@@ -183,7 +203,11 @@ impl Registry {
     }
 
     pub fn search(&self, query: &Query) -> Result<Vec<EntryView>> {
-        Ok(self.list()?.into_iter().filter(|v| query.matches(v)).collect())
+        Ok(self
+            .list()?
+            .into_iter()
+            .filter(|v| query.matches(v))
+            .collect())
     }
 
     /// All entries describing `program_id`: the deployer entry (by PDA) first,
@@ -203,7 +227,9 @@ impl Registry {
     #[must_use]
     pub fn resolve_idl(&self, pointer: &str) -> IdlStatus {
         match self.storage.fetch(pointer) {
-            Err(e) => IdlStatus::Unavailable { reason: format!("unresolvable IDL pointer: {e}") },
+            Err(e) => IdlStatus::Unavailable {
+                reason: format!("unresolvable IDL pointer: {e}"),
+            },
             Ok(bytes) => match parse_idl(&bytes) {
                 Ok(idl) => IdlStatus::Available { idl },
                 Err(reason) => IdlStatus::Unavailable { reason },
@@ -229,7 +255,10 @@ impl Registry {
 pub fn parse_idl(bytes: &[u8]) -> std::result::Result<serde_json::Value, String> {
     let v: serde_json::Value =
         serde_json::from_slice(bytes).map_err(|e| format!("stored IDL is not valid JSON: {e}"))?;
-    if !v.get("instructions").is_some_and(serde_json::Value::is_array) {
+    if !v
+        .get("instructions")
+        .is_some_and(serde_json::Value::is_array)
+    {
         return Err("stored IDL is not a SPEL IDL (no `instructions` array)".into());
     }
     Ok(v)
@@ -241,7 +270,9 @@ pub fn parse_account_id(s: &str) -> Result<AccountId> {
     if let Ok(id) = s.parse::<AccountId>() {
         return Ok(id);
     }
-    spel_framework_core::pda::parse_bytes32(s).map(AccountId::new).map_err(Error::Other)
+    spel_framework_core::pda::parse_bytes32(s)
+        .map(AccountId::new)
+        .map_err(Error::Other)
 }
 
 #[cfg(test)]

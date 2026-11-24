@@ -33,7 +33,10 @@ fn arg(p: *const c_char) -> Result<String, String> {
         return Err("null argument".into());
     }
     // SAFETY: callers pass NUL-terminated strings (checked non-null above).
-    unsafe { CStr::from_ptr(p) }.to_str().map(str::to_owned).map_err(|e| e.to_string())
+    unsafe { CStr::from_ptr(p) }
+        .to_str()
+        .map(str::to_owned)
+        .map_err(|e| e.to_string())
 }
 
 fn out(r: Result<Value, String>) -> *mut c_char {
@@ -58,7 +61,11 @@ fn registry(cfg: &str) -> Result<(Registry, Cfg), String> {
 fn signer(c: &Cfg) -> Result<Signer, String> {
     Ok(Signer {
         spel_bin: c.spel_bin.clone().unwrap_or_else(|| "spel".into()).into(),
-        idl_path: c.idl_path.clone().ok_or("config.idl_path (registry IDL) is required for writes")?.into(),
+        idl_path: c
+            .idl_path
+            .clone()
+            .ok_or("config.idl_path (registry IDL) is required for writes")?
+            .into(),
         fee_payer: c.fee_payer.clone(),
     })
 }
@@ -92,13 +99,25 @@ pub extern "C" fn registry_search(cfg: *const c_char, query: *const c_char) -> *
     out((|| {
         let (reg, _) = registry(&arg(cfg)?)?;
         let q: Value = serde_json::from_str(&arg(query)?).map_err(|e| e.to_string())?;
-        let s = |k: &str| q.get(k).and_then(Value::as_str).filter(|s| !s.is_empty()).map(str::to_owned);
+        let s = |k: &str| {
+            q.get(k)
+                .and_then(Value::as_str)
+                .filter(|s| !s.is_empty())
+                .map(str::to_owned)
+        };
         let kind = match s("kind").as_deref() {
             Some("deployer") => Some(EntryKind::Deployer),
             Some("third_party" | "third-party") => Some(EntryKind::ThirdParty),
             _ => None,
         };
-        to_value(reg.search(&Query { name: s("name"), author: s("author"), kind }).map_err(|e| e.to_string())?)
+        to_value(
+            reg.search(&Query {
+                name: s("name"),
+                author: s("author"),
+                kind,
+            })
+            .map_err(|e| e.to_string())?,
+        )
     })())
 }
 
@@ -180,7 +199,12 @@ pub extern "C" fn registry_update(cfg: *const c_char, request: *const c_char) ->
         let (reg, c) = registry(&arg(cfg)?)?;
         let r: UpdateReq = serde_json::from_str(&arg(request)?).map_err(|e| e.to_string())?;
         let entry = parse_account_id(&r.entry_id).map_err(|e| e.to_string())?;
-        let author = r.author.as_deref().map(parse_account_id).transpose().map_err(|e| e.to_string())?;
+        let author = r
+            .author
+            .as_deref()
+            .map(parse_account_id)
+            .transpose()
+            .map_err(|e| e.to_string())?;
         let u = Update {
             version: r.version,
             description: r.description,
@@ -190,14 +214,20 @@ pub extern "C" fn registry_update(cfg: *const c_char, request: *const c_char) ->
             commit: r.commit,
             build_config: r.build_config,
         };
-        signer(&c)?.update(&reg, &entry, author.as_ref(), &u).map_err(|e| e.to_string())?;
+        signer(&c)?
+            .update(&reg, &entry, author.as_ref(), &u)
+            .map_err(|e| e.to_string())?;
         Ok(json!(true))
     })())
 }
 
 /// Releases a string returned by this library.
+///
+/// # Safety
+///
+/// `s` must be null or a pointer returned by a `registry_*` function, freed once.
 #[no_mangle]
-pub extern "C" fn registry_free_string(s: *mut c_char) {
+pub unsafe extern "C" fn registry_free_string(s: *mut c_char) {
     if !s.is_null() {
         // SAFETY: `s` was produced by `CString::into_raw` in this library.
         drop(unsafe { CString::from_raw(s) });
@@ -212,7 +242,8 @@ mod tests {
         let p = f();
         // SAFETY: p comes from `out`.
         let s = unsafe { CStr::from_ptr(p) }.to_string_lossy().into_owned();
-        registry_free_string(p);
+        // SAFETY: p comes from `out` and is freed once.
+        unsafe { registry_free_string(p) };
         serde_json::from_str(&s).unwrap_or_default()
     }
 
@@ -220,7 +251,10 @@ mod tests {
     fn errors_are_json() {
         let bad = CString::new("{}").unwrap_or_default();
         let v = call(|| registry_list(bad.as_ptr()));
-        assert!(v["error"].as_str().is_some_and(|e| e.contains("config")), "{v}");
+        assert!(
+            v["error"].as_str().is_some_and(|e| e.contains("config")),
+            "{v}"
+        );
         let v = call(|| registry_list(std::ptr::null()));
         assert_eq!(v["error"], "null argument");
     }

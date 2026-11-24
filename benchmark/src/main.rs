@@ -21,7 +21,8 @@ const TARGET: AccountId = AccountId::new([0x50; 32]);
 const AUTHOR: AccountId = AccountId::new([0x60; 32]);
 
 fn pda(seeds: &[[u8; 32]]) -> AccountId {
-    compute_pda(&PROGRAM, seeds)
+    let refs: Vec<&[u8; 32]> = seeds.iter().collect();
+    compute_pda(&PROGRAM, &refs)
 }
 
 fn account(id: AccountId, owner: AccountId, data: Vec<u8>, signed: bool) -> AccountWithMetadata {
@@ -130,7 +131,7 @@ fn stored_entry(kind: EntryKind, id: AccountId, f: Fields) -> AccountWithMetadat
     account(id, PROGRAM, e.to_bytes(), false)
 }
 
-fn run(elf: &[u8], pre: &[AccountWithMetadata], ix: &Instruction) -> (u64, u64) {
+fn run(elf: &'static [u8], pre: &[AccountWithMetadata], ix: &Instruction) -> (u64, u64) {
     let image_id = risc0_binfmt::compute_image_id(elf).expect("image id");
     let program = Program::new_unchecked(image_id.into(), Cow::Borrowed(elf));
     let data = Program::serialize_instruction(ix).expect("instruction serialises");
@@ -147,7 +148,8 @@ fn main() {
     let path = std::env::args().nth(1).unwrap_or_else(|| {
         "programs/registry/methods/guest/target/riscv32im-risc0-zkvm-elf/docker/lez_registry.bin".into()
     });
-    let elf = std::fs::read(&path).unwrap_or_else(|e| panic!("read {path}: {e}"));
+    let elf: &'static [u8] =
+        Box::leak(std::fs::read(&path).unwrap_or_else(|e| panic!("read {path}: {e}")).into_boxed_slice());
     let slot = pda(&[seed_from_str(registry_core::SLOT_SEED), registry_core::seed_from_u64(0)]);
     let dep = pda(&[seed_from_str(registry_core::DEPLOYER_ENTRY_SEED), *TARGET.value()]);
     let tp = pda(&[seed_from_str(registry_core::THIRD_PARTY_ENTRY_SEED), *TARGET.value(), *AUTHOR.value()]);
@@ -180,7 +182,7 @@ fn main() {
             ),
         ];
         for (label, pre, ix) in rows {
-            let (user, total) = run(&elf, &pre, &ix);
+            let (user, total) = run(elf, &pre, &ix);
             println!("| `{label}` | {size} | {user} | {total} |");
         }
     }

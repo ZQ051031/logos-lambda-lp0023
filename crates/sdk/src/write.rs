@@ -46,8 +46,14 @@ impl Signer {
         for (k, v) in args {
             cmd.arg(format!("--{k}")).arg(v);
         }
-        let out = cmd.output().map_err(|e| Error::Other(format!("spel: {e}")))?;
-        let text = format!("{}{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
+        let out = cmd
+            .output()
+            .map_err(|e| Error::Other(format!("spel: {e}")))?;
+        let text = format!(
+            "{}{}",
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr)
+        );
         if !out.status.success() {
             return Err(Error::Other(format!("spel {instruction} failed:\n{text}")));
         }
@@ -77,7 +83,12 @@ impl Signer {
     }
 
     /// Registers the deployer entry; `program` must be a header key in the wallet.
-    pub fn register_deployer(&self, reg: &Registry, program: &AccountId, input: &EntryInput) -> Result<AccountId> {
+    pub fn register_deployer(
+        &self,
+        reg: &Registry,
+        program: &AccountId,
+        input: &EntryInput,
+    ) -> Result<AccountId> {
         let index = reg.state()?.entry_count;
         let mut args = Self::entry_args(index, input);
         args.push(("target-program", program.to_string()));
@@ -85,7 +96,9 @@ impl Signer {
         let id = pda::deployer_entry(&reg.config.registry_id, program);
         match reg.entry_at(&id)? {
             Some(v) if v.verified_deployer => Ok(id),
-            _ => Err(Error::Other(format!("deployer entry was not created (rejected on-chain?)\n{log}"))),
+            _ => Err(Error::Other(format!(
+                "deployer entry was not created (rejected on-chain?)\n{log}"
+            ))),
         }
     }
 
@@ -104,7 +117,9 @@ impl Signer {
         let id = pda::third_party_entry(&reg.config.registry_id, program, author);
         match reg.entry_at(&id)? {
             Some(_) => Ok(id),
-            None => Err(Error::Other(format!("third-party entry was not created (rejected on-chain?)\n{log}"))),
+            None => Err(Error::Other(format!(
+                "third-party entry was not created (rejected on-chain?)\n{log}"
+            ))),
         }
     }
 
@@ -116,7 +131,9 @@ impl Signer {
         author: Option<&AccountId>,
         u: &Update,
     ) -> Result<()> {
-        let view = reg.entry_at(entry_id)?.ok_or_else(|| Error::Other("no such entry".into()))?;
+        let view = reg
+            .entry_at(entry_id)?
+            .ok_or_else(|| Error::Other("no such entry".into()))?;
         let mut args = vec![
             ("version", u.version.clone()),
             ("description", u.description.clone()),
@@ -137,9 +154,13 @@ impl Signer {
             }
         };
         let log = self.run(reg, ix, &args)?;
-        let after = reg.entry_at(entry_id)?.ok_or_else(|| Error::Other("entry vanished".into()))?;
+        let after = reg
+            .entry_at(entry_id)?
+            .ok_or_else(|| Error::Other("entry vanished".into()))?;
         if after.entry.version != u.version || after.entry.idl_pointer != u.idl_pointer {
-            return Err(Error::Other(format!("update was not applied (rejected on-chain?)\n{log}")));
+            return Err(Error::Other(format!(
+                "update was not applied (rejected on-chain?)\n{log}"
+            )));
         }
         Ok(())
     }
@@ -160,9 +181,13 @@ impl Signer {
             ("new-author-name", new_author_name.to_string()),
         ];
         let log = self.run(reg, "transfer_authorship", &args)?;
-        let after = reg.entry_at(entry_id)?.ok_or_else(|| Error::Other("entry vanished".into()))?;
+        let after = reg
+            .entry_at(entry_id)?
+            .ok_or_else(|| Error::Other("entry vanished".into()))?;
         if after.entry.author != *new_author {
-            return Err(Error::Other(format!("transfer was not applied (rejected on-chain?)\n{log}")));
+            return Err(Error::Other(format!(
+                "transfer was not applied (rejected on-chain?)\n{log}"
+            )));
         }
         Ok(())
     }

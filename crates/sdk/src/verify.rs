@@ -33,7 +33,8 @@ impl BuildConfig {
     pub fn output_path(&self, src: &Path) -> PathBuf {
         let guest = src.join(&self.manifest);
         let dir = guest.parent().unwrap_or(src);
-        dir.join("target/riscv32im-risc0-zkvm-elf/docker").join(format!("{}.bin", self.binary))
+        dir.join("target/riscv32im-risc0-zkvm-elf/docker")
+            .join(format!("{}.bin", self.binary))
     }
 }
 
@@ -59,7 +60,10 @@ pub fn unpack(archive: &[u8], dest: &Path) -> Result<()> {
 /// Runs the recorded build and returns the built `.bin` path.
 pub fn rebuild(src: &Path, cfg: &BuildConfig) -> Result<PathBuf> {
     if cfg.builder != "risc0-docker" {
-        return Err(Error::Other(format!("unsupported builder `{}`", cfg.builder)));
+        return Err(Error::Other(format!(
+            "unsupported builder `{}`",
+            cfg.builder
+        )));
     }
     let manifest = src.join(&cfg.manifest);
     if !manifest.starts_with(src) || cfg.manifest.contains("..") {
@@ -76,14 +80,18 @@ pub fn rebuild(src: &Path, cfg: &BuildConfig) -> Result<PathBuf> {
     }
     let out = cfg.output_path(src);
     if !out.exists() {
-        return Err(Error::Other(format!("build did not produce {}", out.display())));
+        return Err(Error::Other(format!(
+            "build did not produce {}",
+            out.display()
+        )));
     }
     Ok(out)
 }
 
 /// ImageID of a RISC Zero program binary (`.bin`, R0BF) as `[u32; 8]`.
 pub fn image_id_of(bin: &[u8]) -> Result<[u32; 8]> {
-    let digest = risc0_binfmt::compute_image_id(bin).map_err(|e| Error::Decode(format!("image id: {e}")))?;
+    let digest =
+        risc0_binfmt::compute_image_id(bin).map_err(|e| Error::Decode(format!("image id: {e}")))?;
     let mut words = [0u32; 8];
     words.copy_from_slice(digest.as_words());
     Ok(words)
@@ -161,6 +169,8 @@ impl LocalVerifications {
     /// Valid only while the deployed ImageID is still the one that was verified.
     #[must_use]
     pub fn is_verified(&self, program_id: &str, current_image_id: &str) -> bool {
-        self.programs.get(program_id).is_some_and(|m| m.image_id == current_image_id)
+        self.programs
+            .get(program_id)
+            .is_some_and(|m| m.image_id == current_image_id)
     }
 }

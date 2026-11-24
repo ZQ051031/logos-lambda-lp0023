@@ -40,7 +40,7 @@
           postInstall = ''
             mkdir -p $out/include
             cp modules/registry/ffi/include/registry_ffi.h $out/include/
-          '' + pkgs.lib.optionalString pkgs.stdenv.isDarwin ''
+          '' + pkgs.lib.optionalString pkgs.stdenv.hostPlatform.isDarwin ''
             if [ -f $out/lib/libregistry_ffi.dylib ]; then
               install_name_tool -id "$out/lib/libregistry_ffi.dylib" $out/lib/libregistry_ffi.dylib
             fi

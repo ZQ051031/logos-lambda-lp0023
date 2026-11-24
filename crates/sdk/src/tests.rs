@@ -35,11 +35,31 @@ fn view(name: &str, author_name: &str, kind: EntryKind) -> EntryView {
 #[test]
 fn query_matching() {
     let v = view("Token Program", "Alice Labs", EntryKind::Deployer);
-    assert!(Query { name: Some("token".into()), ..Query::default() }.matches(&v));
-    assert!(Query { author: Some("alice".into()), ..Query::default() }.matches(&v));
-    assert!(Query { author: Some(v.author.clone()), ..Query::default() }.matches(&v));
-    assert!(!Query { name: Some("amm".into()), ..Query::default() }.matches(&v));
-    assert!(!Query { kind: Some(EntryKind::ThirdParty), ..Query::default() }.matches(&v));
+    assert!(Query {
+        name: Some("token".into()),
+        ..Query::default()
+    }
+    .matches(&v));
+    assert!(Query {
+        author: Some("alice".into()),
+        ..Query::default()
+    }
+    .matches(&v));
+    assert!(Query {
+        author: Some(v.author.clone()),
+        ..Query::default()
+    }
+    .matches(&v));
+    assert!(!Query {
+        name: Some("amm".into()),
+        ..Query::default()
+    }
+    .matches(&v));
+    assert!(!Query {
+        kind: Some(EntryKind::ThirdParty),
+        ..Query::default()
+    }
+    .matches(&v));
 }
 
 fn registry() -> Registry {
@@ -61,7 +81,9 @@ fn idl_degrades_gracefully() {
     std::fs::write(&bad, b"{not json").unwrap_or_default();
     std::fs::write(&wrong, br#"{"name":"x"}"#).unwrap_or_default();
     let r = registry();
-    assert!(r.resolve_idl(&format!("file://{}", good.display())).is_available());
+    assert!(r
+        .resolve_idl(&format!("file://{}", good.display()))
+        .is_available());
     for p in [
         format!("file://{}", bad.display()),
         format!("file://{}", wrong.display()),
@@ -70,7 +92,10 @@ fn idl_degrades_gracefully() {
         "logos-storage://bad/../cid".into(),
         "ipfs://elsewhere".into(),
     ] {
-        assert!(matches!(r.resolve_idl(&p), IdlStatus::Unavailable { .. }), "{p}");
+        assert!(
+            matches!(r.resolve_idl(&p), IdlStatus::Unavailable { .. }),
+            "{p}"
+        );
     }
 }
 
@@ -81,7 +106,10 @@ fn pdas_are_distinct_and_deterministic() {
     let author = AccountId::new([9; 32]);
     assert_eq!(pda::slot(&reg, 3), pda::slot(&reg, 3));
     assert_ne!(pda::slot(&reg, 3), pda::slot(&reg, 4));
-    assert_ne!(pda::deployer_entry(&reg, &prog), pda::third_party_entry(&reg, &prog, &author));
+    assert_ne!(
+        pda::deployer_entry(&reg, &prog),
+        pda::third_party_entry(&reg, &prog, &author)
+    );
     assert_ne!(pda::state(&reg), pda::deployer_entry(&reg, &prog));
 }
 
@@ -98,7 +126,7 @@ fn account_id_parsing() {
 fn build_config_roundtrip() {
     let s = r#"{"builder":"risc0-docker","risc0":"3.0.5","manifest":"programs/registry/methods/guest/Cargo.toml","binary":"lez_registry"}"#;
     let c = verify::BuildConfig::parse(s).unwrap_or_else(|e| panic!("{e}"));
-    assert!(c
-        .output_path(std::path::Path::new("/src"))
-        .ends_with("programs/registry/methods/guest/target/riscv32im-risc0-zkvm-elf/docker/lez_registry.bin"));
+    assert!(c.output_path(std::path::Path::new("/src")).ends_with(
+        "programs/registry/methods/guest/target/riscv32im-risc0-zkvm-elf/docker/lez_registry.bin"
+    ));
 }
